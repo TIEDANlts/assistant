@@ -1,6 +1,6 @@
 # 验证 1：smail（腾讯企业邮）
 
-状态：待验证。先运行 `uv run python spikes/smail_probe.py`（只读），确认无误后加 `--send-self`。把脚本最后打印的“可公开结论”贴到下面，勾选人工确认项，再把结论同步到 ADR 0003 与 0004。
+状态：2026-09-23 已运行只读和 `--send-self` 验证；两次都在 IMAP 认证阶段失败，未发送测试邮件。结论同步到 ADR 0003 与 0004。
 
 ## 要回答的问题
 
@@ -17,7 +17,17 @@
 
 ## 脚本输出（可公开结论）
 
-（粘贴在这里）
+命令 `uv run python spikes/smail_probe.py` 返回退出码 `2`：
+
+```text
+✗ IMAP 登录失败：b'Login fail. Account is abnormal, service is not open, password is incorrect, login frequency limited, or system is busy.'
+请确认：1) 用的是客户端专用密码，不是网页登录密码；2) 网页版“设置 → 客户端设置”已开启 IMAP/SMTP；3) 账户名是完整邮箱地址。
+```
+
+`uv run python spikes/smail_probe.py --send-self` 得到同一认证错误并返回退出码 `2`，所以没有进入 SMTP 发送阶段。邮箱地址和密码值不写入本文件。
+原始日志位于私有数据目录 `state/recon/runs/20260923-1840-01-smail-readonly.log` 和 `state/recon/runs/20260923-1839-01-smail-send-self.log`。
+
+首次只读运行因配置未填写在连接前退出，记录在 `state/recon/runs/20260923-180741-01-smail.log`；以上为随后配置出现后的结果。服务器提示不能区分服务开关、凭据、账号限制或临时故障，已停止继续尝试，待核对后重跑。这些提前退出的运行均未产生脚本末尾的“可公开结论”，此处保留实际错误输出。
 
 ## 人工确认
 

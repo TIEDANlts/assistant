@@ -8,11 +8,11 @@
 
 | 问题 | 结论 | 依据 | ADR |
 | --- | --- | --- | --- |
-| 邮箱怎么连 | 待验证 1 | [smail.md](smail.md) | 0003、0004 |
-| ehall 怎么登录 | 待验证 2 | [ehall-login.md](ehall-login.md) | 0007 |
-| 服务器能不能用 | 待验证 2 | [ehall-login.md](ehall-login.md) | 0009 |
-| 手机收不收得到推送 | 待验证 5 | [push.md](push.md) | 0005 |
-| 先做哪个事务 | 待验证 3、4 | [risk-tiers.md](risk-tiers.md) | 0007 |
+| 邮箱怎么连 | 已配置后的两次命令均在 IMAP 认证阶段失败，未发送测试邮件；具体原因待核对 | [smail.md](smail.md) | 0003、0004 |
+| ehall 怎么登录 | 本机可达，手动登录成功；受保护入口可复用，会话仅完成约 0.02 小时短测 | [ehall-login.md](ehall-login.md) | 0007 |
+| 服务器能不能用 | 未提供服务器目标，未运行服务器验证 | [ehall-login.md](ehall-login.md) | 0009 |
+| 手机收不收得到推送 | 未配置通道，脚本未发送测试消息 | [push.md](push.md) | 0005 |
+| 先做哪个事务 | 6 项入口侦察：2 个查询范围 Q、1 个审批事项 F、3 项 X；首个 D 级事务仍未选定 | [risk-tiers.md](risk-tiers.md) | 0007 |
 
 模型选型见 [llm.md](llm.md)（验证 6，ADR 0006）。
 
@@ -36,6 +36,17 @@
 | 验证 4 事务侦察（6–8 个） | `ehall_recon.py --label <id> --start-url <入口>`，再 `recon_summarize.py service` | 数据仓库 `recon/services/<id>.md`；risk-tiers.md |
 | 验证 5 推送 | `push_probe.py --channel all` | push.md |
 | 验证 6 模型 | `llm_probe.py --dry-run`，再 `llm_probe.py --runs 3` | llm.md |
+
+## 本次执行结果（2026-09-23）
+
+本轮按验证 1–6 推进，先记录缺少条件的步骤，再补充邮箱与会话复核。以下区分实际完成与仍待验证的部分，Phase 0 尚未验收通过。
+
+- 验证 1：只读和 `--send-self` 都在 IMAP 登录时退出，未发送邮件。
+- 验证 2：本机 reach、手动登录、会话 check 和短时 watch 完成；服务器与手机扫码识别未验证。
+- 验证 3：导出 135 条当前可见在线应用；另补读一项官方指南，完整指南目录与应用映射尚未补齐。
+- 验证 4：完成 6 个入口页只读侦察；未点击申请、发送验证码、导出、保存或其他业务按钮，也未选择附件。
+- 验证 5：四个候选推送通道均未配置，退出码 `2`。
+- 验证 6：`--dry-run` 成功；三次真实调用因缺少 `LLM_MODEL` 在连接前退出，退出码 `2`。
 
 ## 侦察期间的规则
 
