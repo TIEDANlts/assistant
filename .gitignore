@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+
+# 密钥与登录态：永不入库（pre-commit 的 forbid-sensitive-files 与 gitleaks 再兜底一次）
+.env
+.env.*
+!.env.example
+*.har
+storage_state*.json
+storage-state*.json
+cookies.txt
+cookies.json
+*.pem
+*.key
+*.p12
+*.pfx
+
+# 运行态数据属于数据目录（assistant-data/state/），不应出现在代码仓库
+state/
+*.sqlite
+*.sqlite3
+
+# 编辑器与系统
+.DS_Store
+.idea/
+.vscode/

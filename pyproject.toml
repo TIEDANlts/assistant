@@ -1,0 +1,106 @@
+[project]
+name = "assistant"
+version = "0.0.1"
+description = "会成长的个人助手：连接 smail、ehall、个人资料库和手机端"
+readme = "README.md"
+requires-python = ">=3.12"
+# 依赖理由见 docs/journal.md「依赖清单」；新增依赖先在计划里说明理由（AGENTS.md）
+dependencies = [
+    "pydantic>=2.8",
+    "tzdata>=2024.1; sys_platform == 'win32'",
+]
+
+[dependency-groups]
+dev = [
+    "import-linter>=2.1",
+    "pre-commit>=4.0",
+    "pyright[nodejs]>=1.1.390",
+    "pytest>=8.3",
+    "ruff>=0.8",
+]
+# Phase 0 验证脚本用；Phase 2/4 起 playwright 与其中一个 LLM SDK 会转为运行时依赖
+spikes = [
+    "anthropic>=0.49",
+    "openai>=1.60",
+    "playwright>=1.49",
+]
+
+[tool.uv]
+default-groups = ["dev", "spikes"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/assistant"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "spikes", "tests", "tests/spikes"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "S"]
+ignore = [
+    "RUF001", "RUF002", "RUF003",  # 中文全角标点不是“易混淆字符”
+    "S310",                        # URL 协议由代码显式校验
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106", "S603", "S607"]
+
+[tool.pyright]
+include = ["src", "tests", "spikes", "scripts"]
+extraPaths = ["spikes"]
+pythonVersion = "3.12"
+typeCheckingMode = "standard"
+strict = ["src/assistant"]
+venvPath = "."
+venv = ".venv"
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+pythonpath = ["spikes"]
+addopts = ["-ra", "--strict-markers", "-m", "not live and not eval"]
+markers = [
+    "live: 访问真实 smail / ehall / 推送 / 模型，默认不跑",
+    "eval: 用真实模型跑评测用例，默认不跑",
+    "browser: 需要本地 Playwright Chromium，缺失时自动跳过",
+]
+
+[tool.importlinter]
+root_package = "assistant"
+
+[[tool.importlinter.contracts]]
+name = "core 只含纯逻辑，不依赖任何外层"
+type = "forbidden"
+source_modules = ["assistant.core"]
+forbidden_modules = [
+    "assistant.adapters",
+    "assistant.agent",
+    "assistant.ehall",
+    "assistant.memory",
+    "assistant.runtime",
+    "assistant.web",
+    "assistant.workflows",
+]
+
+[[tool.importlinter.contracts]]
+name = "适配器之间互不 import"
+type = "independence"
+modules = [
+    "assistant.adapters.ehall",
+    "assistant.adapters.fakes",
+    "assistant.adapters.llm",
+    "assistant.adapters.notify",
+    "assistant.adapters.smail",
+    "assistant.adapters.vault",
+]
+
+[[tool.importlinter.contracts]]
+name = "工作流与 Agent 只通过端口工作，不直接依赖适配器、Web 与运行时"
+type = "forbidden"
+source_modules = ["assistant.agent", "assistant.workflows"]
+forbidden_modules = ["assistant.adapters", "assistant.runtime", "assistant.web"]
