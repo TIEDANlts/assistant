@@ -66,7 +66,7 @@ def test_attempt_limit_stops_password_login(
 ) -> None:
     use_fake_site(monkeypatch, fake_site, "wrong")
     for _ in range(3):
-        spike_common.record_attempt(ehall_login.PASSWORD_KIND, "failed")
+        spike_common.record_attempt(ehall_login.LOGIN_ATTEMPT_KIND, "failed")
     with pytest.raises(SpikeError, match="上限 3"):
         ehall_login.main(["login", "--method", "password", "--headless", "--yes"])
     assert fake_site.paths() == []
@@ -116,5 +116,5 @@ def test_wrong_password_counts_as_failed_attempt(
     argv = ["login", "--method", "password", "--headless", "--yes", "--no-questions", "--wait", "1"]
     assert ehall_login.main(argv) == 1
     window = ehall_login.ATTEMPT_WINDOW
-    assert spike_common.count_attempts(ehall_login.PASSWORD_KIND, window, ["failed"]) == 1
+    assert spike_common.count_attempts(ehall_login.LOGIN_ATTEMPT_KIND, window, ["failed"]) == 1
     assert not (data_home / "state" / "ehall" / "storage_state.json").exists()

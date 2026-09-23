@@ -38,7 +38,7 @@ from spike_common import SpikeError
 
 DEFAULT_BASE_URL = "https://ehall.nju.edu.cn/"
 DEFAULT_AUTH_HOST = "authserver.nju.edu.cn"
-PASSWORD_KIND = "ehall-password"
+LOGIN_ATTEMPT_KIND = "ehall-password"
 ATTEMPT_WINDOW = timedelta(hours=24)
 BROWSER_UA = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -439,7 +439,7 @@ def login_password(
         if not spike_common.confirm("已查看截图，现在输入验证码？"):
             raise SpikeError("需要验证码但没有输入，已放弃（本次不计入尝试次数）。")
         captcha = input("验证码：").strip()
-    failures = spike_common.count_attempts(PASSWORD_KIND, ATTEMPT_WINDOW, ["failed"])
+    failures = spike_common.count_attempts(LOGIN_ATTEMPT_KIND, ATTEMPT_WINDOW, ["failed"])
     question = (
         f"将在 {host_path(frame.url)} 填写账号 {spike_common.redact(credentials.username)} "
         f"和密码并点击登录（24 小时内已失败 {failures} 次，上限 {args.max_attempts}），继续？"
@@ -465,7 +465,7 @@ def login_password(
             texts = latest_page(context).evaluate(ERROR_TEXT_JS)
             errors = [spike_common.redact(str(text)) for text in texts]
     outcome = "ok" if status.logged_in else "failed"
-    spike_common.record_attempt(PASSWORD_KIND, outcome, "；".join(errors))
+    spike_common.record_attempt(LOGIN_ATTEMPT_KIND, outcome, "；".join(errors))
     return status, errors
 
 
@@ -521,7 +521,7 @@ def cmd_login(args: argparse.Namespace, config: EhallConfig) -> int:
             spike_common.require_env("EHALL_PASSWORD"),
         )
         spike_common.check_attempts(
-            PASSWORD_KIND, limit=args.max_attempts, window=ATTEMPT_WINDOW, outcomes=["failed"]
+            LOGIN_ATTEMPT_KIND, limit=args.max_attempts, window=ATTEMPT_WINDOW, outcomes=["failed"]
         )
     out = recon_dir()
     ts = spike_common.stamp()
