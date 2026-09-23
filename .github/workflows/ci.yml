@@ -1,0 +1,28 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+      - name: 安装依赖（uv.lock 必须已提交且最新）
+        run: uv sync --locked
+      - name: ruff
+        run: uv run ruff check .
+      - name: pyright
+        run: uv run pyright
+      - name: 分层契约
+        run: uv run lint-imports
+      - name: 安装 Chromium（浏览器护栏测试用）
+        run: uv run playwright install --with-deps chromium
+      - name: 测试（默认不跑 live 与 eval）
+        run: uv run pytest -q
+      - name: pre-commit 全量检查（含 gitleaks 与格式）
+        run: uv run pre-commit run --all-files --show-diff-on-failure
