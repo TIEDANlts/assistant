@@ -1,0 +1,44 @@
+# gitleaks 配置：在默认规则之上，补充本项目特有的密钥形状。
+# 验收：bash scripts/verify_secret_guard.sh（在临时副本里写入假密钥，确认提交被拦下）。
+title = "assistant gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "锁文件里的哈希不是密钥"
+paths = ['''(?:^|/)uv\.lock$''']
+
+[[rules]]
+id = "wecom-bot-webhook"
+description = "企业微信群机器人 webhook：URL 里的 key 就是密钥"
+regex = '''qyapi\.weixin\.qq\.com/cgi-bin/webhook/send\?key=[0-9a-fA-F-]{32,}'''
+keywords = ["qyapi.weixin.qq.com"]
+
+[[rules]]
+id = "feishu-bot-webhook"
+description = "飞书自定义机器人 webhook：URL 里的 token 就是密钥"
+regex = '''open\.(?:feishu\.cn|larksuite\.com)/open-apis/bot/v2/hook/[0-9a-fA-F-]{32,}'''
+keywords = ["/open-apis/bot/v2/hook/"]
+
+[[rules]]
+id = "bark-device-key"
+description = "Bark 推送地址里的设备 key"
+regex = '''api\.day\.app/[0-9A-Za-z]{16,}'''
+keywords = ["api.day.app"]
+
+[[rules]]
+id = "cas-ticket-granting-ticket"
+description = "统一身份认证的登录票据（CASTGC）"
+regex = '''TGT-[0-9]+-[0-9A-Za-z._-]{20,}'''
+keywords = ["tgt-"]
+
+[[rules]]
+id = "assistant-env-secret"
+description = "本项目环境变量形式的密码、口令或 API key"
+regex = '''(?i)\b(?:SMAIL|EHALL|LLM|ANTHROPIC|OPENAI|DEEPSEEK|DASHSCOPE|MOONSHOT|NTFY|FEISHU|WECOM|BARK)_[A-Z_]*(?:PASSWORD|SECRET|TOKEN|API_KEY|KEY)[ \t]*[=:][ \t]*['"]?([^\s'"#]{8,})'''
+secretGroup = 1
+keywords = ["password", "secret", "token", "key"]
+
+[rules.allowlist]
+regexes = ['''^(?:\$\{|<|changeme|your[-_]|xxx|example|placeholder|fake)''']

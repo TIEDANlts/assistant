@@ -1,0 +1,48 @@
+# 安装：uv run pre-commit install
+# 全量检查：uv run pre-commit run --all-files
+# 验收“能拦下故意写入的假密钥”：bash scripts/verify_secret_guard.sh
+# gitleaks 钩子首次安装需要联网构建（Go）；国内网络可先 export GOPROXY=https://goproxy.cn,direct，
+# 或改用 id: gitleaks-system 并自行安装 gitleaks 可执行文件。
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files
+        args: ["--maxkb=512"]
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: check-yaml
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        args: ["--markdown-linebreak-ext=md"]
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
+
+  - repo: local
+    hooks:
+      - id: forbid-sensitive-files
+        name: forbid secrets, login state, HAR and runtime data (by path)
+        entry: python scripts/forbid_sensitive_files.py
+        language: python
+      - id: ruff-check
+        name: ruff check
+        entry: uv run --no-sync ruff check --fix
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+      - id: ruff-format
+        name: ruff format
+        entry: uv run --no-sync ruff format
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+      - id: lint-imports
+        name: import-linter (layer contracts)
+        entry: uv run --no-sync lint-imports
+        language: system
+        pass_filenames: false
+        types: [python]
