@@ -38,7 +38,7 @@ def test_mask_path_merges_ids() -> None:
 def test_load_dotenv_does_not_override(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     env_file = tmp_path / ".env"
     env_file.write_text(
-        "# 注释\nSPIKE_A=1\nexport SPIKE_B=\"two words\"\nSPIKE_C=\nSPIKE_D=from-file\n",
+        '# 注释\nSPIKE_A=1\nexport SPIKE_B="two words"\nSPIKE_C=\nSPIKE_D=from-file\n',
         encoding="utf-8",
     )
     monkeypatch.setenv("SPIKE_D", "from-shell")
